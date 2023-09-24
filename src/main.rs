@@ -36,9 +36,9 @@ enum Commands {
 }
 
 fn git_update_all(dir: &String) {
-    println!("Updating all git repos in {}", dir);
-
     let dir = std::path::Path::new(dir);
+
+    println!("Updating all git repos in {}", dir.display());
 
     let mut dirs = vec![];
 
@@ -51,7 +51,7 @@ fn git_update_all(dir: &String) {
         }
     }
 
-    println!("Found {} git repositories", dirs.len());
+    println!("Found {} git repositories\n", dirs.len());
 
     let write_lock = Mutex::new(());
 
@@ -66,7 +66,7 @@ fn git_update_all(dir: &String) {
 
         let _lock = write_lock.lock().unwrap();
 
-        println!("\nUpdating {}", dir);
+        println!("Updating {}", dir);
         println!("{}", String::from_utf8(output.stdout).unwrap());
     });
 }
