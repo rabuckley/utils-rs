@@ -13,6 +13,9 @@ fn main() {
         Commands::HtmlToMd { file } => {
             html_to_md(file);
         }
+        Commands::TtfToWoff2 { dir } => {
+            ttf_to_woff2(dir);
+        }
     }
 }
 
@@ -33,6 +36,12 @@ enum Commands {
 
     #[command(name = "html-to-md", about = "Convert a html file to markdown")]
     HtmlToMd { file: Vec<String> },
+
+    #[command(
+        name = "ttf-to-woff2",
+        about = "Convert all TTF files in a directory to woff2"
+    )]
+    TtfToWoff2 { dir: String },
 }
 
 fn git_update_all(dir: &String) {
@@ -90,4 +99,35 @@ fn html_to_md_file(file: &String) {
         .arg(file.replace(".html", ".md"))
         .output()
         .expect("failed to execute pandoc");
+}
+
+fn ttf_to_woff2(dir: &String) {
+    let dir = std::path::Path::new(dir);
+
+    println!("Converting all TTF files in {}", dir.display());
+
+    let mut files = vec![];
+
+    for entry in std::fs::read_dir(dir).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if path.is_file() && path.extension().unwrap() == "ttf" {
+            files.push(path);
+        }
+    }
+
+    println!("Found {} TTF files\n", files.len());
+
+    files.par_iter().for_each(|file| {
+        let file = file.to_str().unwrap();
+
+        std::process::Command::new("fonttools")
+            .arg("ttLib.woff2")
+            .arg("compress")
+            .arg(file)
+            .output()
+            .expect("failed to execute process");
+
+        println!("Converted file {}", file);
+    });
 }
